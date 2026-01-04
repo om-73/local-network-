@@ -1,0 +1,11 @@
+{
+    "name": "network-monitor",
+    "version": "1.0.0",
+    "description": "Network Monitoring System",
+    "scripts": {
+        "start": "cd backend && npm start",
+        "dev": "cd backend && npm run dev"
+    },
+    "author": "Antigravity",
+    "license": "ISC"
+}

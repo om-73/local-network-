@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Monitor</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Network Traffic Monitor</h1>
+            <div class="controls">
+                <select id="interfaceSelect">
+                    <option value="">Auto-Detect Interface</option>
+                </select>
+                <button id="startBtn" class="btn primary">Start Capture</button>
+                <button id="stopBtn" class="btn danger" disabled>Stop Capture</button>
+                <button id="scanBtn" class="btn secondary">Scan Devices</button>
+                <button id="exportBtn" class="btn info">Export JSON</button>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Stats Cards -->
+            <div class="card stats-card">
+                <h3>Total Packets</h3>
+                <div class="stat-value" id="totalPackets">0</div>
+            </div>
+            <div class="card stats-card">
+                <h3>Bandwidth</h3>
+                <div class="stat-value" id="bandwidth">0 B/s</div>
+            </div>
+            <div class="card chart-card">
+                <h3>Protocol Distribution</h3>
+                <canvas id="protocolChart"></canvas>
+            </div>
+            <div class="card chart-card">
+                <h3>Top Source IPs</h3>
+                <canvas id="sourceChart"></canvas>
+            </div>
+            <div class="card chart-card">
+                <h3>Top Domains</h3>
+                <canvas id="domainChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Wireshark-like Split Layout -->
+        <div class="split-container">
+            <!-- Top Pane: Packet List -->
+            <div class="pane packet-list-pane">
+                <div class="panel-header">
+                    <h2>Packet List</h2>
+                    <input type="text" id="filterInput" placeholder="Apply a display filter ... <Ctrl-/>">
+                </div>
+                <div class="table-container">
+                    <table id="packetTable">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Time</th>
+                                <th>Source</th>
+                                <th>Destination</th>
+                                <th>Protocol</th>
+                                <th>Length</th>
+                                <th>Info</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Middle Pane: Packet Details -->
+            <div class="pane packet-details-pane">
+                <div class="panel-header">
+                    <h2>Packet Details</h2>
+                </div>
+                <div class="details-content" id="packetDetails">
+                    <div class="placeholder-text">Select a packet to view details</div>
+                </div>
+            </div>
+
+            <!-- Bottom Pane: Packet Bytes (Placeholder) -->
+            <div class="pane packet-bytes-pane">
+                <div class="panel-header">
+                    <h2>Packet Bytes</h2>
+                </div>
+                <div class="bytes-content">
+                    <div class="placeholder-text">0000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+                    </div>
+                    <div class="placeholder-text">0010 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="alertBanner" class="alert-banner hidden"></div>
+
+    <!-- Device Scan Modal -->
+    <div id="deviceModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Network Devices</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="clearHistoryBtn" class="btn secondary"
+                        style="padding: 4px 12px; font-size: 0.8rem;">Clear History</button>
+                    <button class="close-btn" onclick="closeDeviceModal()">×</button>
+                </div>
+            </div>
+            <ul id="deviceList" class="device-list">
+                <li class="empty-state">Scanning...</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="charts.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+
+</html>
