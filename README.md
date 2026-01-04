@@ -109,6 +109,23 @@ graph TD;
     -   Click **Start Capture**.
     -   Watch the packets flow in!
 
+## 🚀 Deployment
+
+### Backend (Render)
+1.  Create a new **Web Service** on Render.
+2.  Connect your GitHub repository.
+3.  **Important**: Select **Docker** as the Runtime.
+    -   *Why?* The backend requires `tshark` (Wireshark) to be installed on the system, which is handled by the `Dockerfile`. Standard Node.js environments do not have this tool.
+4.  Deploy!
+
+### Frontend (Vercel)
+1.  Import the project on Vercel.
+2.  Select `frontend` as the **Root Directory**.
+3.  Deploy.
+4.  **Connect to Backend**:
+    -   Once deployed, update `frontend/config.js` in your repository with your new Render URL.
+    -   Result: Vercel will auto-redeploy with the correct connection.
+
 ## 🧪 Troubleshooting
 
 | Issue | Solution |
