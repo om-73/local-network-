@@ -4,7 +4,8 @@
     "description": "Network Monitoring System",
     "scripts": {
         "start": "cd backend && npm start",
-        "dev": "cd backend && npm run dev"
+        "dev": "cd backend && npm run dev",
+        "postinstall": "cd backend && npm install"
     },
     "author": "Antigravity",
     "license": "ISC"
