@@ -1,4 +1,4 @@
-const socket = io();
+const socket = io(CONFIG.BACKEND_URL);
 
 // DOM Elements
 const startBtn = document.getElementById('startBtn');
@@ -92,7 +92,7 @@ startBtn.addEventListener('click', async () => {
     deviceHistory = {}; // Clear history on new capture start
 
     const iface = interfaceSelect.value;
-    await fetch('/api/start-capture', {
+    await fetch(`${CONFIG.BACKEND_URL}/api/start-capture`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ interfaceName: iface })
@@ -100,14 +100,14 @@ startBtn.addEventListener('click', async () => {
 });
 
 stopBtn.addEventListener('click', async () => {
-    await fetch('/api/stop-capture', { method: 'POST' });
+    await fetch(`${CONFIG.BACKEND_URL}/api/stop-capture`, { method: 'POST' });
 });
 
 scanBtn.addEventListener('click', async () => {
     scanBtn.disabled = true;
     scanBtn.innerText = 'Scanning...';
     try {
-        const res = await fetch('/api/devices');
+        const res = await fetch(`${CONFIG.BACKEND_URL}/api/devices`);
         if (!res.ok) throw new Error('Scan failed');
         const devices = await res.json();
         renderDevices(devices);
@@ -144,13 +144,13 @@ function closeDeviceModal() {
 window.closeDeviceModal = closeDeviceModal; // Expose to global scope for HTML button
 
 exportBtn.addEventListener('click', () => {
-    window.location.href = '/api/export';
+    window.location.href = `${CONFIG.BACKEND_URL}/api/export`;
 });
 
 // Helper Functions
 async function fetchInterfaces() {
     try {
-        const res = await fetch('/api/interfaces');
+        const res = await fetch(`${CONFIG.BACKEND_URL}/api/interfaces`);
         const list = await res.json();
         let en0Found = false;
         list.forEach(iface => {
@@ -172,7 +172,7 @@ async function fetchInterfaces() {
 
 async function fetchStats() {
     try {
-        const res = await fetch('/api/stats');
+        const res = await fetch(`${CONFIG.BACKEND_URL}/api/stats`);
         const stats = await res.json();
 
         // Update stats if elements exist
