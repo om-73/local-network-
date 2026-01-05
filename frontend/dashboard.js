@@ -40,6 +40,12 @@ socket.on('status', (data) => {
     isCapturing = data.isCapturing;
     updateControls();
 
+    if (isCapturing) {
+        startStatsPolling();
+    } else {
+        stopStatsPolling();
+    }
+
     if (data.isDemo) {
         showAlert('ℹ️ Demo Mode Active: Showing simulated traffic data.');
     }
@@ -206,6 +212,19 @@ function updateControls() {
         header.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3)';
     } else {
         header.style.boxShadow = '';
+    }
+}
+
+let statsInterval = null;
+function startStatsPolling() {
+    if (statsInterval) return;
+    statsInterval = setInterval(fetchStats, 1000); // Update charts every second
+}
+
+function stopStatsPolling() {
+    if (statsInterval) {
+        clearInterval(statsInterval);
+        statsInterval = null;
     }
 }
 
