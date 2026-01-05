@@ -51,6 +51,5 @@ class DeviceScanner {
         ];
     }
 }
-}
 
 module.exports = new DeviceScanner();
