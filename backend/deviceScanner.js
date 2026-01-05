@@ -4,29 +4,48 @@ const dns = require('dns').promises;
 class DeviceScanner {
     async scan() {
         return new Promise(async (resolve, reject) => {
-            // 1. Perform Active Ping Sweep to populate ARP table
-            await this.pingSweep();
+            // 0. Cloud Environment Check
+            if (process.env.RENDER || process.env.VERCEL) {
+                console.log('Cloud environment detected. Returning simulated devices.');
+                return resolve({ devices: this.getSimulatedDevices(), isSimulated: true });
+            }
+
+            // 1. Perform Active Ping Sweep to populate ARP table (Local Only)
+            try {
+                await this.pingSweep();
+            } catch (e) {
+                console.error('Ping sweep failed:', e);
+            }
 
             // 2. Read ARP Table
             exec('arp -a', async (error, stdout, stderr) => {
                 const devices = [];
 
-                // If error (like on Render) or empty output, fallback to simulation
+                // If error or empty output, fallback to simulation
                 if (error || !stdout || stdout.length < 5) {
                     console.log('ARP Code failed or returned empty. Returning simulated devices for Demo Mode.');
                     return resolve({ devices: this.getSimulatedDevices(), isSimulated: true });
                 }
 
                 const lines = stdout.split('\n');
-                const regex = /\((.*?)\) at (.*?) on/i;
+                // Regex for macOS/BSD: ? (192.168.0.1) at 50:2b:73:db:93:40 on en0
+                // Regex for Windows: 192.168.1.1 00-11-22-33-44-55 dynamic
+                // We'll try a flexible approach.
+                const macRegex = /([0-9A-Fa-f]{1,2}[:-]){5}([0-9A-Fa-f]{1,2})/;
+                const ipRegex = /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/;
 
                 for (const line of lines) {
-                    const match = line.match(regex);
-                    if (match) {
-                        const ip = match[1];
-                        const mac = match[2];
-                        let hostname = 'Unknown Device';
+                    const ipMatch = line.match(ipRegex);
+                    const macMatch = line.match(macRegex);
 
+                    if (ipMatch && macMatch) {
+                        const ip = ipMatch[0];
+                        const mac = macMatch[0];
+
+                        // Ignore multicast/broadcast
+                        if (ip.startsWith('224.') || ip.endsWith('.255') || mac === 'ff:ff:ff:ff:ff:ff') continue;
+
+                        let hostname = 'Unknown Device';
                         try {
                             const names = await dns.reverse(ip);
                             if (names && names.length > 0) hostname = names[0];
