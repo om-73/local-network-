@@ -109,7 +109,12 @@ scanBtn.addEventListener('click', async () => {
     try {
         const res = await fetch(`${CONFIG.BACKEND_URL}/api/devices`);
         if (!res.ok) throw new Error('Scan failed');
-        const devices = await res.json();
+        const { devices, isSimulated } = await res.json();
+
+        if (isSimulated) {
+            showAlert('⚠️ Demo Mode: Showing Simulated Devices (Run locally for real scan)');
+        }
+
         renderDevices(devices);
     } catch (e) {
         showAlert('Scan failed: ' + e.message);

@@ -25,7 +25,8 @@ class MockTsharkService extends EventEmitter {
         this.emit('status', { status: 'running', isDemo: true });
 
         // Update IPs with real scanned devices for realistic simulation
-        deviceScanner.scan().then(devices => {
+        deviceScanner.scan().then(result => {
+            const devices = result.devices || result; // Backward compatibility check just in case
             const scannedIps = devices.map(d => d.ip);
             if (scannedIps.length > 0) {
                 // Combine scanned local IPs with some public internet IPs

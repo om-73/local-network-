@@ -33,10 +33,10 @@ class DeviceScanner {
                 }
 
                 if (devices.length === 0) {
-                    return resolve(this.getSimulatedDevices());
+                    return resolve({ devices: this.getSimulatedDevices(), isSimulated: true });
                 }
 
-                resolve(devices);
+                resolve({ devices, isSimulated: false });
             });
         });
     }
