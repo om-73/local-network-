@@ -10,7 +10,7 @@ const apiRoutes = require('./routes/api');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, { processOpts: { cors: { origin: "*" } } });
+const io = socketIo(server, { cors: { origin: "*" } });
 
 // Middleware
 app.use(cors());
