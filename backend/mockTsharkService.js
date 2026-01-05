@@ -44,7 +44,8 @@ class MockTsharkService extends EventEmitter {
                 length: Math.floor(Math.random() * 1500) + 40,
                 srcMac: '00:00:00:00:00:00',
                 dstMac: '00:00:00:00:00:00',
-                url: Math.random() > 0.3 ? this.domains[Math.floor(Math.random() * this.domains.length)] : null // 70% chance to have a URL
+                url: Math.random() > 0.3 ? this.domains[Math.floor(Math.random() * this.domains.length)] : null,
+                hexdump: this.generateRandomHex(Math.floor(Math.random() * 64) + 64) // 64-128 bytes of hex
             };
             this.emit('packet', packet);
         }, 300 + Math.random() * 500); // Send packet every 300-800ms
@@ -58,6 +59,15 @@ class MockTsharkService extends EventEmitter {
         this.isCapturing = false;
         this.emit('status', { status: 'stopped' });
         console.log('Mock Capture stopped');
+    }
+
+    generateRandomHex(length) {
+        let result = '';
+        const characters = '0123456789ABCDEF';
+        for (let i = 0; i < length * 2; i++) {
+            result += characters.charAt(Math.floor(Math.random() * 16));
+        }
+        return result;
     }
 }
 
