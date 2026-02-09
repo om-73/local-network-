@@ -1,3 +1,4 @@
+const CONFIG = window.CONFIG || { BACKEND_URL: '' };
 const socket = io(CONFIG.BACKEND_URL);
 
 // DOM Elements
