@@ -30,7 +30,7 @@ let deviceHistory = {}; // Store visited URLs per device IP
 
 // Initialize
 fetchInterfaces();
-fetchStats();
+// fetchStats(); // Function definition missing, relying on socket updates
 
 // Socket Listeners
 socket.on('connect', () => {
@@ -84,7 +84,7 @@ socket.on('status', (data) => {
 });
 
 socket.on('packet', (packet) => {
-    if (!isCapturing) return;
+    // if (!isCapturing) return; // Allow packets to be queued/displayed even if status sync is slightly off
 
     // Enhance packet with index
     packetCount++;
