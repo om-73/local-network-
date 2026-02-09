@@ -13,11 +13,15 @@ class StatsService {
             domains: {},
             deviceActivity: {} // Packets per IP
         };
+        this.intervalBytes = 0;
+        this.lastTickTime = Date.now();
+        this.currentBandwidth = 0;
     }
 
     processPacket(packet) {
         this.stats.totalPackets++;
         this.stats.totalBytes += packet.length;
+        this.intervalBytes += packet.length;
 
         // Protocol stats
         const proto = packet.protocol || 'Unknown';
@@ -34,6 +38,17 @@ class StatsService {
         }
     }
 
+    tick() {
+        const now = Date.now();
+        const durationSec = (now - this.lastTickTime) / 1000;
+        if (durationSec > 0) {
+            this.currentBandwidth = (this.intervalBytes / durationSec).toFixed(2);
+        }
+        this.intervalBytes = 0;
+        this.lastTickTime = now;
+        return this.currentBandwidth;
+    }
+
     getStats() {
         // Sort top sources (top 5)
         const sortedSources = Object.entries(this.stats.topSources)
@@ -44,14 +59,11 @@ class StatsService {
                 return obj;
             }, {});
 
-        const durationSec = (Date.now() - this.stats.startTime) / 1000;
-        const bandwidth = durationSec > 0 ? (this.stats.totalBytes / durationSec).toFixed(2) : 0;
-
         return {
             ...this.stats,
             topSources: sortedSources,
             topDomains: this.getTopDomains(),
-            bandwidth: bandwidth // bytes per second
+            bandwidth: this.currentBandwidth // bytes per second in last tick
         };
     }
 

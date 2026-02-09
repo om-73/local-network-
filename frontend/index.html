@@ -18,6 +18,9 @@
                 <span id="modeBadge" class="badge">Live Mode</span>
             </div>
             <div class="controls">
+                <button id="helpBtn" class="btn secondary" title="How to enable Real Capture?">
+                    <span>❓</span> Live Guide
+                </button>
                 <select id="interfaceSelect">
                     <option value="">Auto-Detect Interface</option>
                 </select>
@@ -124,7 +127,43 @@
         </div>
     </div>
 
-    <script src="config.js"></script>
+    <!-- Live Traffic Guide Modal -->
+    <div id="guideModal" class="modal hidden">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header">
+                <h2>🚀 How to Enable Real-Time Live Capture</h2>
+                <button class="close-btn" onclick="closeGuideModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 24px; line-height: 1.6;">
+                <p>Currently, the app is running in <strong>Demo Mode</strong> because it lacks permissions to capture
+                    real network packets.</p>
+
+                <h3 style="margin: 20px 0 10px; color: var(--accent-color);">Option 1: Run with Sudo (Recommended for
+                    Local)</h3>
+                <p>Close the current backend terminal and run the server with administrative privileges:</p>
+                <pre
+                    style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; font-family: 'JetBrains Mono'; color: #10b981; margin: 10px 0;">sudo npm run dev</pre>
+
+                <h3 style="margin: 20px 0 10px; color: var(--accent-color);">Option 2: Install Wireshark ChmodBPF</h3>
+                <p>If you're on macOS, install the <strong>ChmodBPF</strong> component from Wireshark to allow capture
+                    without sudo:</p>
+                <ol style="margin-left: 20px;">
+                    <li>Download/Install <a href="https://www.wireshark.org/" target="_blank"
+                            style="color: var(--accent-color);">Wireshark</a>.</li>
+                    <li>During installation, ensure <strong>Install ChmodBPF</strong> is checked.</li>
+                    <li>Restart your terminal.</li>
+                </ol>
+
+                <div
+                    style="margin-top: 24px; padding: 16px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <strong>Current Interface:</strong> You are scanning on <code>en0</code> (Wi-Fi). Ensure your device
+                    is connected to the network you want to monitor.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script src="charts.js"></script>
     <script src="dashboard.js"></script>
 </body>

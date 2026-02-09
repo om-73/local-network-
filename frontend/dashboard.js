@@ -36,6 +36,22 @@ socket.on('connect', () => {
     console.log('Connected to backend');
 });
 
+socket.on('stats', (stats) => {
+    // Update stats if elements exist
+    if (totalPacketsEl) totalPacketsEl.innerText = stats.totalPackets;
+    const bandwidthEl = document.getElementById('bandwidth');
+    if (bandwidthEl) bandwidthEl.innerText = stats.bandwidth + ' B/s';
+
+    // Sync packet count if we joined late
+    if (packetCount === 0 && stats.totalPackets > 0) {
+        packetCount = stats.totalPackets;
+    }
+
+    if (typeof updateCharts === 'function') {
+        updateCharts(stats);
+    }
+});
+
 socket.on('status', (data) => {
     isCapturing = data.isCapturing;
     updateControls();
@@ -51,14 +67,12 @@ socket.on('status', (data) => {
         }
     }
 
-    if (isCapturing) {
-        startStatsPolling();
-    } else {
-        stopStatsPolling();
-    }
-
     if (data.isDemo) {
-        showAlert('ℹ️ Demo Mode Active: Showing simulated traffic data.');
+        // Only show alert once per session
+        if (!window.demoAlertShown) {
+            showAlert('ℹ️ Demo Mode Active: Showing simulated traffic data.');
+            window.demoAlertShown = true;
+        }
     }
 });
 
@@ -153,10 +167,27 @@ if (clearHistoryBtn) {
     });
 }
 
+const helpBtn = document.getElementById('helpBtn');
+const guideModal = document.getElementById('guideModal');
+
+if (helpBtn) {
+    helpBtn.addEventListener('click', () => {
+        guideModal.classList.remove('hidden');
+    });
+}
+
+function closeGuideModal() {
+    guideModal.classList.add('hidden');
+}
+window.closeGuideModal = closeGuideModal;
+
 // Close modal when clicking outside
 window.onclick = function (event) {
     if (event.target == deviceModal) {
         closeDeviceModal();
+    }
+    if (event.target == guideModal) {
+        closeGuideModal();
     }
 }
 
@@ -192,27 +223,6 @@ async function fetchInterfaces() {
     }
 }
 
-async function fetchStats() {
-    try {
-        const res = await fetch(`${CONFIG.BACKEND_URL}/api/stats`);
-        const stats = await res.json();
-
-        // Update stats if elements exist
-        if (totalPacketsEl) totalPacketsEl.innerText = stats.totalPackets;
-        const bandwidthEl = document.getElementById('bandwidth');
-        if (bandwidthEl) bandwidthEl.innerText = stats.bandwidth + ' B/s';
-
-        // Sync packet count if we joined late
-        if (packetCount === 0 && stats.totalPackets > 0) {
-            packetCount = stats.totalPackets;
-        }
-
-        if (typeof updateCharts === 'function') {
-            updateCharts(stats);
-        }
-    } catch (e) { console.error(e); }
-}
-
 function updateControls() {
     startBtn.disabled = isCapturing;
     stopBtn.disabled = !isCapturing;
@@ -223,19 +233,6 @@ function updateControls() {
         header.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3)';
     } else {
         header.style.boxShadow = '';
-    }
-}
-
-let statsInterval = null;
-function startStatsPolling() {
-    if (statsInterval) return;
-    statsInterval = setInterval(fetchStats, 1000); // Update charts every second
-}
-
-function stopStatsPolling() {
-    if (statsInterval) {
-        clearInterval(statsInterval);
-        statsInterval = null;
     }
 }
 

@@ -702,3 +702,98 @@ tr.selected.proto-HTTP td {
     opacity: 0.5;
     font-style: italic;
 }
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 12px;
+    }
+
+    header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 16px;
+        padding: 16px;
+    }
+
+    .controls {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .controls select,
+    .controls .btn {
+        flex: 1;
+        min-width: 120px;
+        font-size: 0.75rem;
+        padding: 8px 12px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .split-container {
+        height: auto;
+        gap: 16px;
+    }
+
+    .pane {
+        height: 350px;
+        min-height: 300px;
+    }
+
+    .modal-content {
+        width: 95% !important;
+        max-height: 90vh;
+    }
+
+    #filterInput {
+        width: 100%;
+    }
+
+    .panel-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    h1 {
+        font-size: 1.1rem;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    table {
+        min-width: 500px;
+    }
+}
+
+@media (max-width: 480px) {
+    .controls .btn {
+        width: 100%;
+    }
+
+    .mode-badge {
+        font-size: 0.55rem;
+    }
+
+    .card {
+        padding: 16px;
+    }
+}

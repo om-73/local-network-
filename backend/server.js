@@ -50,6 +50,13 @@ tsharkService.on('error', (error) => {
     io.emit('error', { message: error.message });
 });
 
+// Real-time stats pushing (1 second interval)
+setInterval(() => {
+    statsService.tick();
+    const stats = statsService.getStats();
+    io.emit('stats', stats);
+}, 1000);
+
 // Start Server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
