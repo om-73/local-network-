@@ -116,48 +116,62 @@ class TsharkService extends EventEmitter {
             });
 
             this.process.stderr.on('data', (data) => {
-                const msg = data.toString().toLowerCase();
-                // tshark sends capture stats to stderr
-                if (msg.includes('permission denied') || msg.includes('you do not have permission') || msg.includes('operation not permitted')) {
-                    console.error(`Tshark Permission Error: ${msg}`);
-                    this.emit('error', { message: '⚠️ Permission denied. Falling back to Demo Mode for visualization.' });
+                const msg = data.toString();
+                const lowered = msg.toLowerCase();
 
-                    // Kill the failed process and switch to demo
-                    if (this.process) this.process.kill();
-                    this.process = null;
-                    this.isCapturing = false;
-                    this.isDemoMode = true;
+                // Detection patterns for permission/operation errors
+                const isPermissionError =
+                    lowered.includes('permission denied') ||
+                    lowered.includes('you do not have permission') ||
+                    lowered.includes('operation not permitted') ||
+                    lowered.includes('bpf') ||
+                    lowered.includes('access denied');
 
-                    this.lastFailTime = Date.now();
-                    console.log('Switching to Demo Mode...');
-                    mockTshark.startCapture();
-                }
-                else if (!msg.includes('packets captured') && !msg.includes('captured')) {
-                    // Filter out some verbose stats/info
+                if (isPermissionError) {
+                    console.error(`Tshark Permission Error Detected: ${msg}`);
+                    this.triggerFallback('⚠️ Permission denied. Falling back to Demo Mode.');
+                } else if (!lowered.includes('packets captured') && !lowered.includes('captured')) {
                     console.log(`Tshark Log: ${msg}`);
                 }
             });
 
             this.process.on('close', (code) => {
                 console.log(`Tshark process exited with code ${code}`);
-                // Only reset if this was the active process and we aren't in Demo Mode
-                if (!this.isDemoMode) {
+
+                // If it exited with error and we aren't already in demo, fallback
+                if (code !== 0 && code !== null && !this.isDemoMode) {
+                    console.log(`Tshark exited unexpectedly. Code: ${code}. Checking for fallback...`);
+                    this.triggerFallback('⚠️ Tshark failed to start. Falling back to Demo Mode.');
+                } else if (!this.isDemoMode) {
                     this.isCapturing = false;
                     this.emit('status', { status: 'stopped', code });
                 }
                 this.process = null;
             });
 
-            this.process.on('error', (err) => {
-                console.error('Failed to spawn tshark:', err);
-                this.isCapturing = false;
-                this.emit('error', err);
-            });
-
         } catch (error) {
             console.error('Error starting tshark:', error);
-            this.emit('error', error);
+            this.triggerFallback(`⚠️ Error starting tshark: ${error.message}`);
         }
+    }
+
+    triggerFallback(errorMessage) {
+        if (this.isDemoMode) return;
+
+        console.log(`Triggering Fallback: ${errorMessage}`);
+        this.emit('error', { message: errorMessage });
+
+        // Kill any existing process
+        if (this.process) {
+            this.process.kill();
+            this.process = null;
+        }
+
+        this.isCapturing = false;
+        this.isDemoMode = true;
+        this.lastFailTime = Date.now();
+
+        mockTshark.startCapture();
     }
 
     stopCapture() {
