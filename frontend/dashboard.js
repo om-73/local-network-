@@ -51,6 +51,12 @@ socket.on('stats', (stats) => {
     if (typeof updateCharts === 'function') {
         updateCharts(stats);
     }
+
+    // Hide initial "Waiting" message if data starts flowing
+    if (stats.totalPackets > 0) {
+        const waitingEl = document.getElementById('waitingMessage');
+        if (waitingEl) waitingEl.style.display = 'none';
+    }
 });
 
 socket.on('status', (data) => {

@@ -116,9 +116,9 @@ class TsharkService extends EventEmitter {
             });
 
             this.process.stderr.on('data', (data) => {
-                const msg = data.toString();
+                const msg = data.toString().toLowerCase();
                 // tshark sends capture stats to stderr
-                if (msg.includes('Permission denied') || msg.includes('you do not have permission')) {
+                if (msg.includes('permission denied') || msg.includes('you do not have permission') || msg.includes('operation not permitted')) {
                     console.error(`Tshark Permission Error: ${msg}`);
                     this.emit('error', { message: '⚠️ Permission denied. Falling back to Demo Mode for visualization.' });
 
