@@ -1,5 +1,118 @@
 const CONFIG = window.CONFIG || { BACKEND_URL: '' };
-const socket = io(CONFIG.BACKEND_URL);
+
+// Standalone Mode: Mock API and Socket
+if (CONFIG.isStandalone) {
+    console.log('🚀 Running in Standalone Demo Mode');
+
+    // 1. Mock Fetch API
+    const originalFetch = window.fetch;
+    window.fetch = async (url, options) => {
+        if (url.includes('/api/interfaces')) {
+            return {
+                json: async () => [
+                    { name: 'en0', address: '192.168.1.100' },
+                    { name: 'lo0', address: '127.0.0.1' },
+                    { name: 'eth0', address: '10.0.0.5' }
+                ]
+            };
+        }
+        if (url.includes('/api/start-capture')) {
+            return { ok: true, json: async () => ({}) };
+        }
+        if (url.includes('/api/stop-capture')) {
+            return { ok: true, json: async () => ({}) };
+        }
+        if (url.includes('/api/devices')) {
+            return {
+                ok: true,
+                json: async () => ({
+                    isSimulated: true,
+                    devices: [
+                        { ip: '192.168.1.1', mac: '00:11:22:33:44:55', name: 'Gateway' },
+                        { ip: '192.168.1.105', mac: 'AA:BB:CC:DD:EE:FF', name: 'iPhone' },
+                        { ip: '192.168.1.120', mac: '11:22:33:44:55:66', name: 'Smart TV' }
+                    ]
+                })
+            };
+        }
+        return originalFetch(url, options);
+    };
+
+    // 2. Mock Socket
+    class MockSocket {
+        constructor() {
+            this.listeners = {};
+            this.connected = true;
+            setTimeout(() => this.trigger('connect'), 100);
+
+            // Start Traffic Simulation
+            this.simInterval = null;
+        }
+        on(event, callback) {
+            if (!this.listeners[event]) this.listeners[event] = [];
+            this.listeners[event].push(callback);
+        }
+        trigger(event, data) {
+            if (this.listeners[event]) {
+                this.listeners[event].forEach(cb => cb(data));
+            }
+        }
+        emit(event, data) {
+            // Handle client emits if needed
+        }
+
+        startSimulation() {
+            if (this.simInterval) return;
+            let packetCount = 0;
+            let byteCount = 0;
+
+            this.trigger('status', { isCapturing: true, isDemo: true });
+
+            this.simInterval = setInterval(() => {
+                // Generate random packet
+                const size = Math.floor(Math.random() * 1500);
+                packetCount++;
+                byteCount += size;
+
+                const packet = {
+                    index: packetCount,
+                    timestamp: Date.now() / 1000,
+                    srcIp: `192.168.1.${Math.floor(Math.random() * 255)}`,
+                    dstIp: `142.250.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+                    protocol: ['TCP', 'UDP', 'HTTP', 'DNS'][Math.floor(Math.random() * 4)],
+                    length: size,
+                    url: Math.random() > 0.7 ? 'example.com' : undefined
+                };
+
+                this.trigger('packet', packet);
+                this.trigger('stats', {
+                    totalPackets: packetCount,
+                    bandwidth: Math.floor(byteCount * (1000 / 100) / 1024), // Randomish calc
+                    bytes: byteCount
+                });
+            }, 100);
+        }
+
+        stopSimulation() {
+            clearInterval(this.simInterval);
+            this.simInterval = null;
+            this.trigger('status', { isCapturing: false, isDemo: true });
+        }
+    }
+
+    // Intercept Start/Stop buttons to trigger mock socket
+    setTimeout(() => {
+        document.getElementById('startBtn').addEventListener('click', () => window.socket.startSimulation());
+        document.getElementById('stopBtn').addEventListener('click', () => window.socket.stopSimulation());
+    }, 500);
+
+    window.socket = new MockSocket();
+} else {
+    // Normal connection
+    window.socket = io(CONFIG.BACKEND_URL);
+}
+
+const socket = window.socket;
 
 // DOM Elements
 const startBtn = document.getElementById('startBtn');
