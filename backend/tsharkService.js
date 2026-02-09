@@ -53,7 +53,12 @@ class TsharkService extends EventEmitter {
             return;
         }
 
-        this.tsharkPath = this.findTshark();
+        // Prevent rapid restart loop after failure
+        const now = Date.now();
+        if (this.lastFailTime && (now - this.lastFailTime < 2000)) {
+            console.log('Capture restart throttled');
+            return;
+        }
 
         if (!this.tsharkPath) {
             console.log('Tshark not found. Starting in Demo Mode.');
@@ -115,9 +120,19 @@ class TsharkService extends EventEmitter {
                 // tshark sends capture stats to stderr
                 if (msg.includes('Permission denied') || msg.includes('you do not have permission')) {
                     console.error(`Tshark Permission Error: ${msg}`);
-                    this.emit('error', { message: 'Permission denied. Please run server with sudo or install Wireshark ChmodBPF.' });
-                    this.stopCapture(); // Ensure we clean up
-                } else if (!msg.includes('packets captured') && !msg.includes('captured')) {
+                    this.emit('error', { message: '⚠️ Permission denied. Falling back to Demo Mode for visualization.' });
+
+                    // Kill the failed process and switch to demo
+                    if (this.process) this.process.kill();
+                    this.process = null;
+                    this.isCapturing = false;
+                    this.isDemoMode = true;
+
+                    this.lastFailTime = Date.now();
+                    console.log('Switching to Demo Mode...');
+                    mockTshark.startCapture();
+                }
+                else if (!msg.includes('packets captured') && !msg.includes('captured')) {
                     // Filter out some verbose stats/info
                     console.log(`Tshark Log: ${msg}`);
                 }
@@ -125,9 +140,12 @@ class TsharkService extends EventEmitter {
 
             this.process.on('close', (code) => {
                 console.log(`Tshark process exited with code ${code}`);
-                this.isCapturing = false;
+                // Only reset if this was the active process and we aren't in Demo Mode
+                if (!this.isDemoMode) {
+                    this.isCapturing = false;
+                    this.emit('status', { status: 'stopped', code });
+                }
                 this.process = null;
-                this.emit('status', { status: 'stopped', code });
             });
 
             this.process.on('error', (err) => {

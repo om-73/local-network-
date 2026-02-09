@@ -40,6 +40,17 @@ socket.on('status', (data) => {
     isCapturing = data.isCapturing;
     updateControls();
 
+    const modeBadge = document.getElementById('modeBadge');
+    if (modeBadge) {
+        if (data.isDemo) {
+            modeBadge.innerText = 'Demo Mode';
+            modeBadge.classList.add('demo');
+        } else {
+            modeBadge.innerText = 'Live Mode';
+            modeBadge.classList.remove('demo');
+        }
+    }
+
     if (isCapturing) {
         startStatsPolling();
     } else {

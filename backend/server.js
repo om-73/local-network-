@@ -51,8 +51,17 @@ tsharkService.on('error', (error) => {
 });
 
 // Start Server
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log('Ensure you are running with admin privileges to capture packets.');
+});
+
+server.on('error', (e) => {
+    if (e.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use. Please stop the other process or use a different port (PORT=XXXX npm start).`);
+        process.exit(1);
+    } else {
+        console.error('Server error:', e);
+    }
 });
