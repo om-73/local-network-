@@ -33,6 +33,6 @@ This project represents my ability to handle complex system integrations and del
 I am currently looking for my next role in **Software Engineering / Full-Stack Development**. If your team is looking for someone who loves solving technical challenges, I’d love to connect! 🤝
 
 📁 **Explore the Code**: [https://github.com/om-73/local-network-](https://github.com/om-73/local-network-)
-🚀 **Live Backend Demo**: [https://local-network-luco.onrender.com](https://local-network-luco.onrender.com)
+🚀 **Live Project Demo**: [https://local-network.vercel.app](https://local-network.vercel.app)
 
 #SoftwareEngineering #FullStackDeveloper #NodeJS #Networking #RealTimeData #Hiring #OpenSource #CodingJourney

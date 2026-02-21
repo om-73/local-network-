@@ -62,6 +62,6 @@ It’s been a great learning experience in handling "live" data and systemic com
 
 Check it out below! 👇
 📁 **Repo**: [https://github.com/om-73/local-network-](https://github.com/om-73/local-network-)
-🚀 **Live**: [https://local-network-luco.onrender.com](https://local-network-luco.onrender.com)
+🚀 **Live**: [https://local-network.vercel.app](https://local-network.vercel.app)
 
 #Coding #Networking #ProjectShowcase #NodeJS
