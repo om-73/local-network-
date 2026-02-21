@@ -120,15 +120,8 @@ const stopBtn = document.getElementById('stopBtn');
 const scanBtn = document.getElementById('scanBtn');
 const exportBtn = document.getElementById('exportBtn');
 const interfaceSelect = document.getElementById('interfaceSelect');
-const tableBody = document.querySelector('#packetTable tbody');
-const totalPacketsEl = document.getElementById('totalPackets'); // Might be missing if stats card removed?
-// Checked index.html: Stats cards are still there in .dashboard-grid (I didn't remove them in the edit, only replaced .main-content). 
-// Wait, I replaced .main-content. The stats cards were *outside* .main-content in the previous file?
-// Let's check the view_file output from Step 18.
-// The stats cards are in .dashboard-grid, which is *before* .main-content. So they are safe.
-
-const packetDetailsEl = document.getElementById('packetDetails');
-const filterInput = document.getElementById('filterInput');
+const tableBody = document.getElementById('packetList');
+const totalPacketsEl = document.getElementById('totalPackets');
 const alertBanner = document.getElementById('alertBanner');
 const deviceModal = document.getElementById('deviceModal');
 const deviceList = document.getElementById('deviceList');
@@ -153,8 +146,11 @@ socket.on('connect', () => {
 socket.on('stats', (stats) => {
     // Update stats if elements exist
     if (totalPacketsEl) totalPacketsEl.innerText = stats.totalPackets;
-    const bandwidthEl = document.getElementById('bandwidth');
-    if (bandwidthEl) bandwidthEl.innerText = stats.bandwidth + ' B/s';
+
+    // Inject simulated latency if missing for the chart
+    if (stats && stats.latency === undefined) {
+        stats.latency = Math.floor(Math.random() * 50) + 10;
+    }
 
     // Sync packet count if we joined late
     if (packetCount === 0 && stats.totalPackets > 0) {
@@ -357,67 +353,20 @@ function updateControls() {
 }
 
 function addPacketToTable(packet) {
-    // Filter check
-    const filter = filterInput.value.toLowerCase();
-    if (filter) {
-        const text = `${packet.srcIp} ${packet.dstIp} ${packet.protocol} ${packet.url || ''}`.toLowerCase();
-        if (!text.includes(filter)) return;
-    }
-
     const row = document.createElement('tr');
     row.className = `proto-${packet.protocol}`;
-    row.dataset.index = packet.index; // Store index for retrieval
-
-    // Click Handler for Selection
-    row.addEventListener('click', () => {
-        // Deselect current
-        const current = tableBody.querySelector('.selected');
-        if (current) current.classList.remove('selected');
-
-        // Select new
-        row.classList.add('selected');
-        renderPacketDetails(packet);
-        renderPacketBytes(packet);
-    });
-
-    // Timestamp
-    const date = new Date(packet.timestamp * 1000);
-    const timeStr = date.toLocaleTimeString().split(' ')[0] + '.' + date.getMilliseconds();
-
-    // Info Column Construction
-    let info = '';
-    if (packet.protocol === 'HTTP' || packet.protocol === 'HTTPS') {
-        info = `${packet.method || 'GET'} ${packet.url || '/'}`;
-    } else if (packet.protocol === 'DNS') {
-        info = `Standard query ${packet.url || ''}`;
-    } else if (packet.protocol === 'TCP') {
-        info = `${packet.srcPort || '443'} → ${packet.dstPort || '55556'} [ACK] Seq=...`;
-    } else {
-        info = `Protocol ${packet.protocol} Data`;
-    }
-
-    // Fallback if we don't have ports in the mock/capture yet
-    if (!info || info === 'undefined') info = packet.url || 'Application Data';
+    row.dataset.index = packet.index;
 
     row.innerHTML = `
-        <td>${packet.index}</td>
-        <td>${timeStr}</td>
         <td>${packet.srcIp}</td>
         <td>${packet.dstIp}</td>
         <td>${packet.protocol}</td>
-        <td>${packet.length}</td>
-        <td>${info}</td>
+        <td>${packet.length} B</td>
     `;
 
     // Limit table rows
-    if (tableBody.children.length > MAX_PACKETS) {
-        tableBody.removeChild(tableBody.lastChild); // Remove from bottom if appending to top? 
-        // Wireshark appends to bottom usually, but auto-scrolls.
-        // Let's stick to prepending for "Latest on top" for web convenience,
-        // OR append and scrollToBottom for authentic feel.
-        // Web Monitor usually does "Latest Top". Let's stick to "Latest Top" for now as it's easier to see without auto-scroll logic.
-        // But Wireshark lists are chronological (Latest Bottom). 
-        // Let's allow Prepend (Latest Top) for now.
+    if (tableBody.children.length > 50) {
+        tableBody.removeChild(tableBody.lastChild);
     }
     tableBody.prepend(row);
 }

@@ -12,100 +12,90 @@
 
 <body>
     <div class="container">
-        <header>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <h1>Network Traffic Monitor</h1>
-                <span id="modeBadge" class="badge">Live Mode</span>
+        <aside class="branding">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+                <span>Premium</span>
             </div>
-            <div class="controls">
-                <button id="helpBtn" class="btn secondary" title="How to enable Real Capture?">
-                    <span>❓</span> Live Guide
-                </button>
-                <select id="interfaceSelect">
-                    <option value="">Auto-Detect Interface</option>
-                </select>
-                <button id="startBtn" class="btn primary">Start Capture</button>
-                <button id="stopBtn" class="btn danger" disabled>Stop Capture</button>
-                <button id="scanBtn" class="btn secondary">Scan Devices</button>
-                <button id="exportBtn" class="btn info">Export JSON</button>
-            </div>
-        </header>
+            <h1>Network Traffic Monitoring</h1>
+        </aside>
 
-        <div class="dashboard-grid">
-            <!-- Stats Cards -->
-            <div class="card stats-card">
-                <h3>Total Packets</h3>
-                <div class="stat-value" id="totalPackets">0</div>
+        <main class="premium-grid">
+            <!-- Bandwidth Card -->
+            <div class="card chart-card glass-panel" id="bandwidthPanel">
+                <div class="card-header">
+                    <h3>Bandwidth Usage</h3>
+                    <span class="stat-mini" id="bandwidthStat">0 B/s</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="bandwidthChart"></canvas>
+                </div>
             </div>
-            <div class="card stats-card">
-                <h3>Bandwidth</h3>
-                <div class="stat-value" id="bandwidth">0 B/s</div>
-            </div>
-            <div class="card chart-card">
-                <h3>Protocol Distribution</h3>
-                <canvas id="protocolChart"></canvas>
-            </div>
-            <div class="card chart-card">
-                <h3>Top Source IPs</h3>
-                <canvas id="sourceChart"></canvas>
-            </div>
-            <div class="card chart-card">
-                <h3>Top Domains</h3>
-                <canvas id="domainChart"></canvas>
-            </div>
-        </div>
 
-        <!-- Wireshark-like Split Layout -->
-        <div class="split-container">
-            <!-- Top Pane: Packet List -->
-            <div class="pane packet-list-pane">
-                <div class="panel-header">
-                    <h2>Packet List</h2>
-                    <input type="text" id="filterInput" placeholder="Apply a display filter ... <Ctrl-/>">
+            <!-- Latency Card -->
+            <div class="card chart-card glass-panel" id="latencyPanel">
+                <div class="card-header">
+                    <h3>Latency</h3>
+                    <span class="stat-mini" id="latencyStat">0 ms</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="latencyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Protocol Distribution Card -->
+            <div class="card glass-panel" id="protocolPanel">
+                <div class="card-header">
+                    <h3>Protocol Distribution</h3>
+                </div>
+                <div class="chart-container doughnut">
+                    <canvas id="protocolChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Packet Stream Card -->
+            <div class="card glass-panel table-card" id="streamPanel">
+                <div class="card-header">
+                    <h3>Real-Time Packet Stream</h3>
+                    <div class="controls-mini">
+                        <button id="startBtn" class="btn-icon" title="Start Capture">▶</button>
+                        <button id="stopBtn" class="btn-icon danger" title="Stop Capture" disabled>■</button>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table id="packetTable">
                         <thead>
                             <tr>
-                                <th>No.</th>
-                                <th>Time</th>
                                 <th>Source</th>
                                 <th>Destination</th>
                                 <th>Protocol</th>
-                                <th>Length</th>
-                                <th>Info</th>
+                                <th>Size</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Rows will be added here -->
+                        <tbody id="packetList">
+                            <!-- Rows added dynamically -->
                         </tbody>
                     </table>
                 </div>
             </div>
+        </main>
 
-            <!-- Middle Pane: Packet Details -->
-            <div class="pane packet-details-pane">
-                <div class="panel-header">
-                    <h2>Packet Details</h2>
-                </div>
-                <div class="details-content" id="packetDetails">
-                    <div class="placeholder-text">Select a packet to view details</div>
-                </div>
+        <footer class="bottom-bar">
+            <div class="global-controls">
+                <select id="interfaceSelect">
+                    <option value="">Auto-Detect Interface</option>
+                </select>
+                <button id="scanBtn" class="btn shadow">Scan Devices</button>
+                <button id="exportBtn" class="btn shadow">Export JSON</button>
+                <button id="helpBtn" class="btn-icon secondary">❓</button>
+                <span id="modeBadge" class="badge">Live</span>
             </div>
-
-            <!-- Bottom Pane: Packet Bytes (Placeholder) -->
-            <div class="pane packet-bytes-pane">
-                <div class="panel-header">
-                    <h2>Packet Bytes</h2>
-                </div>
-                <div class="bytes-content">
-                    <div class="placeholder-text">0000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-                    </div>
-                    <div class="placeholder-text">0010 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-                    </div>
-                </div>
+            <div class="global-stats">
+                <span>Total Packets: <strong id="totalPackets">0</strong></span>
             </div>
-        </div>
+        </footer>
     </div>
 
     <div id="alertBanner" class="alert-banner hidden"></div>

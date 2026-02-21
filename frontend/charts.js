@@ -1,95 +1,117 @@
-const ctxProtocol = document.getElementById('protocolChart').getContext('2d');
-const ctxSource = document.getElementById('sourceChart').getContext('2d');
-const ctxDomain = document.getElementById('domainChart').getContext('2d');
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = "'Inter', sans-serif";
 
 const commonOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-        legend: {
-            labels: { color: '#e0e0e0' }
-        }
+        legend: { display: false }
     },
     scales: {
         y: {
-            grid: { color: '#404040' },
-            ticks: { color: '#e0e0e0' }
+            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+            ticks: { font: { size: 10 } }
         },
         x: {
-            grid: { color: '#404040' },
-            ticks: { color: '#e0e0e0' }
+            grid: { display: false },
+            ticks: { font: { size: 10 } }
         }
+    },
+    elements: {
+        line: { tension: 0.4 },
+        point: { radius: 0 }
     }
 };
 
-const protocolChart = new Chart(ctxProtocol, {
+const protocolChart = new Chart(document.getElementById('protocolChart'), {
     type: 'doughnut',
     data: {
-        labels: [],
+        labels: ['TCP', 'UDP', 'HTTP', 'DNS', 'Other'],
         datasets: [{
-            data: [],
-            backgroundColor: [
-                '#64B5F6', '#81C784', '#FFD54F', '#BA68C8', '#E57373', '#90A4AE'
-            ],
-            borderWidth: 0
+            data: [0, 0, 0, 0, 0],
+            backgroundColor: ['#00f2ff', '#b100ff', '#00ff88', '#ffee00', '#ff4757'],
+            borderWidth: 0,
+            hoverOffset: 10
         }]
     },
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        cutout: '80%',
         plugins: {
-            legend: { position: 'right', labels: { color: '#e0e0e0' } }
+            legend: {
+                display: true,
+                position: 'right',
+                labels: {
+                    usePointStyle: true,
+                    padding: 20,
+                    font: { size: 11 }
+                }
+            }
         }
     }
 });
 
-const sourceChart = new Chart(ctxSource, {
-    type: 'bar',
+const bandwidthChart = new Chart(document.getElementById('bandwidthChart'), {
+    type: 'line',
     data: {
-        labels: [],
+        labels: Array(20).fill(''),
         datasets: [{
-            label: 'Packets',
-            data: [],
-            backgroundColor: '#4CAF50'
+            label: 'Bandwidth',
+            data: Array(20).fill(0),
+            borderColor: '#00f2ff',
+            backgroundColor: 'rgba(0, 242, 255, 0.1)',
+            fill: true,
+            borderWidth: 2
         }]
     },
     options: commonOptions
 });
 
-const domainChart = new Chart(ctxDomain, {
-    type: 'bar',
+const latencyChart = new Chart(document.getElementById('latencyChart'), {
+    type: 'line',
     data: {
-        labels: [],
+        labels: Array(20).fill(''),
         datasets: [{
-            label: 'Requests',
-            data: [],
-            backgroundColor: '#FF7043'
+            label: 'Latency',
+            data: Array(20).fill(0),
+            borderColor: '#b100ff',
+            backgroundColor: 'rgba(177, 0, 255, 0.1)',
+            fill: true,
+            borderWidth: 2
         }]
     },
-    options: {
-        ...commonOptions,
-        indexAxis: 'y' // Horizontal bar chart for domains (names can be long)
-    }
+    options: commonOptions
 });
 
 function updateCharts(stats) {
     if (!stats) return;
 
-    // Update Protocol Chart
+    // 1. Update Protocol Distribution
     const protocols = stats.protocols || {};
-    protocolChart.data.labels = Object.keys(protocols);
-    protocolChart.data.datasets[0].data = Object.values(protocols);
-    protocolChart.update('none'); // 'none' for performance
+    const labels = protocolChart.data.labels;
+    const newData = labels.map(label => protocols[label] || 0);
+    protocolChart.data.datasets[0].data = newData;
+    protocolChart.update('none');
 
-    // Update Top Sources Chart
-    const sources = stats.topSources || {};
-    sourceChart.data.labels = Object.keys(sources);
-    sourceChart.data.datasets[0].data = Object.values(sources);
-    sourceChart.update('none');
+    // 2. Update Bandwidth Time-Series
+    const bwData = bandwidthChart.data.datasets[0].data;
+    bwData.push(stats.bandwidth || 0);
+    if (bwData.length > 20) bwData.shift();
+    bandwidthChart.update('none');
 
-    // Update Top Domains Chart
-    const domains = stats.topDomains || {};
-    domainChart.data.labels = Object.keys(domains);
-    domainChart.data.datasets[0].data = Object.values(domains);
-    domainChart.update('none');
+    // 3. Update Latency Time-Series
+    const latData = latencyChart.data.datasets[0].data;
+    // Simulator or Real stats might not have latency yet, using 0 as fallback
+    latData.push(stats.latency || 0);
+    if (latData.length > 20) latData.shift();
+    latencyChart.update('none');
+
+    // Update Mini-Stats in UI
+    const bwStat = document.getElementById('bandwidthStat');
+    if (bwStat) bwStat.innerText = stats.bandwidth + ' B/s';
+
+    // For Latency, we might need to calculate it or get it from backend
+    const latStat = document.getElementById('latencyStat');
+    if (latStat) latStat.innerText = (stats.latency || 0) + ' ms';
 }
